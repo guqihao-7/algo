@@ -1,4 +1,4 @@
-package ds;
+package data_structure;
 
 import java.io.BufferedReader;
 import java.io.IOException;

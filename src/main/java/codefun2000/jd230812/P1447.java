@@ -1,4 +1,4 @@
-package codefun2000;
+package codefun2000.jd230812;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -1,7 +1,5 @@
 package codetop;
 
-import ds.BinarySearch;
-
 /**
  * 搜索旋转排序数组
  */

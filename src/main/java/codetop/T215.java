@@ -1,9 +1,7 @@
 package codetop;
 
-import ds.MaxHeap;
-
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.PriorityQueue;
 
 public class T215 {
     public static void main(String[] args) throws IOException {

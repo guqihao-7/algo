@@ -1,2 +1,7 @@
-package leetcode.list.T50_99;public class T56 {
+package leetcode.list.T50_99;
+
+import java.util.Arrays;
+
+public class T56 {
+
 }

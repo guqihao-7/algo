@@ -1,4 +1,4 @@
-package codefun2000.mt200819;
+package codefun2000.mt230819;
 
 import java.util.Scanner;
 

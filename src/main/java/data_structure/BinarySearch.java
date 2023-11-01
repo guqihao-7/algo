@@ -1,4 +1,4 @@
-package ds;
+package data_structure;
 
 public class BinarySearch {
     // 找 x 或 x 的后继

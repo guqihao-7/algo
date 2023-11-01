@@ -1,7 +1,5 @@
 package codetop;
 
-import java.util.Arrays;
-
 public class T53 {
     public int maxSubArray(int[] nums) {
         int n = nums.length;
