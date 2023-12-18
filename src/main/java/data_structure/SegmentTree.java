@@ -28,7 +28,7 @@ public class SegmentTree {
 
     void pushUp(int p) {
         tree[p] = tree[lson(p)] + tree[rson(p)]; // 区间和
-        //tree[p] = Math.min(tree[lson(p)], tree[rson(p)]);  // 区间最小值
+        // tree[p] = Math.min(tree[lson(p)], tree[rson(p)]);  // 区间最小值
     }
 
     // 节点 p 代表的区间是 [pl, pr] 左闭右闭
@@ -60,7 +60,7 @@ public class SegmentTree {
         tree[p] += addition * (pr - pl + 1);
     }
 
-    void pushDown(int p, int pl, int pr) {        // 不能覆盖时, 把tag穿给子树
+    void pushDown(int p, int pl, int pr) {        // 不能覆盖时, 把tag传给子树
         if (tag[p] != 0) {
             int mid = pl + pr >> 1;
             addTag(lson(p), pl, mid, tag[p]);

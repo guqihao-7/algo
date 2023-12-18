@@ -1,7 +1,5 @@
 package leetcode.list.T500_549;
 
-import com.sun.javafx.geom.Edge;
-import javafx.scene.transform.Rotate;
 import leetcode.list.TreeNode;
 
 import java.util.ArrayDeque;
