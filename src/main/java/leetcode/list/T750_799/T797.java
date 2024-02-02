@@ -54,6 +54,7 @@ public class T797 {
             int n = paths.size();
             for (int i = 0; i < n; i++) {
                 List<Integer> cur = paths.poll();
+                if (cur == null || cur.isEmpty()) continue;
                 int last = cur.get(cur.size() - 1);
                 if (last == graph.length - 1) {
                     res.add(cur);
