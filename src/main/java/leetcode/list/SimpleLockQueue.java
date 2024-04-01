@@ -24,7 +24,7 @@ public class SimpleLockQueue {
     }
 
     public boolean acquire() {
-        Node node = null;
+        Node node;
         if (tryAcquire()) return true;
         // 抢锁失败，thread 封装成 node 进队
         node = new Node();
