@@ -6,9 +6,7 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class SimpleLockQueue {
     private static Unsafe UNSAFE;
@@ -24,32 +22,39 @@ public class SimpleLockQueue {
     }
 
     public boolean acquire() {
-        Node node;
+        // 先尝试获取锁
         if (tryAcquire()) return true;
+
         // 抢锁失败，thread 封装成 node 进队
-        node = new Node();
+        Node node = new Node();
         node.waiter = Thread.currentThread();
+
         while (true) {
             Node t = tail;
             node.prev = t;
+            // t 先将引用指向自己，只是为了调用一下 CAS
             if (t.casNext(null, t)) {
+                // CAS 成功，其他的线程 CAS 时 expected 都是 null，只会失败
                 t.next = node;
+                tail = node;
                 break;
             }
         }
 
+        // 此时入队成功，但并不放弃，查看自己是不是 head 的下一个，是的话仍尝试抢
         // try again, 在队中成功一个是自己是 head 的下一个，另一个是 tryAcquire成功
         while (true) {
             final Node p = Objects.requireNonNull(node).prev;
             if (p == head && tryAcquire()) {    // try again
+                // 是 head 的下一个表示自己就该执行了，然后将自己置为 head，等到自己执行完，唤醒自己的后继
                 head = node;
                 node.waiter = null;
-                head.prev = null;
+                node.prev = null;
                 p.next = null;
                 return true;
             }
             else {
-                LockSupport.park(this); // retry 依然失败就要 park，等待唤醒
+                LockSupport.park(this); // retry 依然失败就要 park，等待唤醒，唤醒之后就一直在判断自己是不是 head 的下一个
             }
         }
     }
@@ -61,24 +66,33 @@ public class SimpleLockQueue {
     public boolean tryAcquire() {
         final Thread current = Thread.currentThread();
         final AtomicInteger c = getState();
+
+        // 当前没有持有者
         if (c.get() == 0) {
             if (c.compareAndSet(0, 1)) {
                 setExclusiveOwner(current);
                 return true;
             }
         }
+
+        // 持有者就是自己，重入
         else if (current == exclusiveOwnerThread) {
             c.incrementAndGet();
             return true;
         }
+
+        // 当前有持有者且不是自己，就返回 false
         return false;
     }
 
     public boolean tryRelease() {
+        // 不是本人不能释放
         if (exclusiveOwnerThread != Thread.currentThread()) {
             return false;
         }
 
+        // todo 这里没有考虑重入？
+        // 可以释放了，去找下一个被唤醒的，这里是从后往前找的，主要是因为 双链+cas 的问题
         Node s = head.next;
         if (head != null) {
             s = null;
@@ -109,10 +123,7 @@ public class SimpleLockQueue {
 
     public SimpleLockQueue() {
         head = new Node();
-        tail = new Node();
-        head.next = tail;
-        tail.prev = head;
-
+        tail = head;
         state = new AtomicInteger(0);
     }
 
@@ -151,23 +162,23 @@ public class SimpleLockQueue {
         }
     }
 
-    public static int a = 1;
+    public static volatile int a = 100;
 
     public static void main(String[] args) {
         SimpleLockQueue lock = new SimpleLockQueue();
-        Lock rLock = new ReentrantLock();
         Thread[] threads = new Thread[3];
         for (int i = 0; i < threads.length; i++) {
             threads[i] = new Thread(() -> {
-                while (true) {
+                while (a > 0) {
                     lock.acquire();
                     try {
                         System.out.println(a);
-                        a++;
+                        a--;
                     } finally {
                         lock.release();
                     }
                 }
+                System.out.println();
             });
         }
 

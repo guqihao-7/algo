@@ -150,11 +150,11 @@ public class BPlusTree<K extends Comparable<K>, V> {
          */
         @Override
         public SplitResult<K, V> split() {
-            /**
-             * Splitting this node will cause its father to insert a new key,
-             * so check its father first. And this should be done before splitting
-             * current node to guarantee that the father can get the correct
-             * total count during splitting.
+            /*
+              Splitting this node will cause its father to insert a new key,
+              so check its father first. And this should be done before splitting
+              current node to guarantee that the father can get the correct
+              total count during splitting.
              */
             Node<K, V> root = null;
             if (father != null && father.keys.size() + 1 > MAX_DEG) {
