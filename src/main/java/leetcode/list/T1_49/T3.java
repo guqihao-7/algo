@@ -1,7 +1,6 @@
 package leetcode.list.T1_49;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class T3 {
     public int lengthOfLongestSubstring(String s) {
