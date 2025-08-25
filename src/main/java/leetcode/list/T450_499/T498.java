@@ -8,6 +8,26 @@ import java.util.*;
  * 只不过保存答案时需要拐弯，reverse
  */
 public class T498 {
+
+    public int[] findDiagonalOrder2(int[][] mat) {
+        int m = mat.length, n = mat[0].length, idx = 0, ans[] = new int[m * n];
+        for (int k = 0; k <= m + n - 2; k++) {
+            int minJ = Math.max(0, k - m + 1);
+            int maxJ = Math.min(n - 1, k);
+            if (k % 2 == 0) {
+                for (int j = minJ; j <= maxJ; j++) {
+                    ans[idx++] = mat[k - j][j];
+                }
+            }
+            else {
+                for (int j = maxJ; j >= minJ; j--) {
+                    ans[idx++] = mat[k - j][j];
+                }
+            }
+        }
+        return ans;
+    }
+
     public int[] findDiagonalOrder(int[][] mat) {
         Deque<int[]> q = new ArrayDeque<>();
         int m = mat.length, n = mat[0].length;
