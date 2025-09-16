@@ -1,14 +1,15 @@
 package leetcode.biweekly.b165;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class T3 {
     public static void main(String[] args) {
         T3 solution = new T3();
         // System.out.println(Arrays.deepToString(solution.generateSchedule2(3)));
-        System.out.println(Arrays.deepToString(solution.generateSchedule2(8)));
+        // System.out.println(Arrays.deepToString(solution.generateSchedule2(5)));
+        // System.out.println(Arrays.deepToString(solution.generateSchedule2(6)));
+        // System.out.println(Arrays.deepToString(solution.generateSchedule2(7)));
+        System.out.println(Arrays.deepToString(solution.generateSchedule3(8)));
         // System.out.println(Arrays.deepToString(solution.generateSchedule2(50)));
     }
 
@@ -35,6 +36,37 @@ public class T3 {
         }
 
         return res;
+    }
+
+    public int[][] generateSchedule3(int n) {
+        if (n < 5) return new int[][]{};
+
+        int[][] allMatches = generateAllMatches(n);
+        while (!isValid(allMatches)) {
+            shuffle(allMatches);
+        }
+        return allMatches;
+    }
+
+    private boolean isValid(int[][] allMatches) {
+        for (int i = 0; i < allMatches.length - 1; i++)
+            for (int team1 : allMatches[i])
+                for (int team2 : allMatches[i + 1])
+                    if (team1 == team2)
+                        return false;
+        return true;
+    }
+
+    Random random = new Random(System.nanoTime() ^ (long) (Math.random() * Integer.MAX_VALUE));
+
+    private void shuffle(int[][] allMatches) {
+        int len = allMatches.length;
+        for (int i = len; i > 1; i--) {
+            int j = random.nextInt(i);
+            int[] t = allMatches[j];
+            allMatches[j] = allMatches[i - 1];
+            allMatches[i - 1] = t;
+        }
     }
 
     public int[][] generateSchedule(int n) {
