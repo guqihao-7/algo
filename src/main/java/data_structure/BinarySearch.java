@@ -33,7 +33,7 @@ public class BinarySearch {
          小于 target --> 大于等于 target 的第一个数的下标 - 1
          小于等于 target --> 大于等于 (target+1) 的第一个数的下标 - 1
      */
-    static int lower_bound(int[] nums, int target) {
+   public static int lower_bound(int[] nums, int target) {
         int n = nums.length, l = 0, r = n - 1;
         while (l <= r) {
             int m = l + (r - l) / 2;
