@@ -5,8 +5,11 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 
 public class SpinLock {
-    // 这里 volatile 不能去掉, 不然即使 cas 会刷新 store buffer, 另一个 core
-    // 也会从自己的 store buffer 读取 而不是 memory
+    /*
+        需不需要加 volatile 是根据 unlock 怎么做决定的
+        如果 unlock 用的 cas, 则这里不需要 volatile
+        如果 unlock 用的不是 cas, 这里需要 volatile
+     */
     private volatile int flag;
 
     private static final Unsafe U;
@@ -36,5 +39,6 @@ public class SpinLock {
     public void unlock() {
         // unlock 不需要 cas 保证原子性, 没有 race condition
         flag = 0;
+        // U.compareAndSwapInt(this, VALUE, 1, 0);
     }
 }
