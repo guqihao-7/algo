@@ -8,9 +8,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.LockSupport;
 
 public class Mutex {
-    private volatile int flag;
-    private volatile int guard;
-    private final Queue<Thread> waitQueue;
+    private volatile int flag = 0;
+    private volatile int guard = 0;
+    private final Queue<Thread> waitQueue = new ConcurrentLinkedQueue<>();
 
     private static final Unsafe U;
 
@@ -28,10 +28,6 @@ public class Mutex {
         }
     }
 
-    public Mutex() {
-        waitQueue = new ConcurrentLinkedQueue<>();
-    }
-
     public void lock() {
         while (!U.compareAndSwapInt(this, VALUE, 0, 1)) ;
         if (flag == 0) {
@@ -47,13 +43,10 @@ public class Mutex {
 
     public void unlock() {
         while (!U.compareAndSwapInt(this, VALUE, 0, 1)) ;
-        if (waitQueue.isEmpty()) {
+        if (waitQueue.isEmpty())
             flag = 0;
-        }
-        else {
-            Thread head = waitQueue.remove();
-            LockSupport.unpark(head);
-        }
+        else
+            LockSupport.unpark(waitQueue.remove());
         guard = 0;
     }
 }
