@@ -8,20 +8,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.LockSupport;
 
 public class Mutex {
+    private volatile long owner = 0;
     private volatile int flag = 0;
-    private volatile int guard = 0;
-    private final Queue<Thread> waitQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<WaitNode> waitQueue = new ConcurrentLinkedQueue<>();
 
     private static final Unsafe U;
-
-    private static final long VALUE;
+    private static final long FLAG_OFFSET;
 
     static {
         try {
             Field field = Unsafe.class.getDeclaredField("theUnsafe");
             field.setAccessible(true);
             U = (Unsafe) field.get(null);
-            VALUE = U.objectFieldOffset(Mutex.class.getDeclaredField("guard"));
+            FLAG_OFFSET = U.objectFieldOffset(Mutex.class.getDeclaredField("flag"));
         }
         catch (Exception e) {
             throw new Error(e);
@@ -29,24 +28,41 @@ public class Mutex {
     }
 
     public void lock() {
-        while (!U.compareAndSwapInt(this, VALUE, 0, 1)) ;
-        if (flag == 0) {
-            flag = 1;
-            guard = 0;
+        while (!U.compareAndSwapInt(this, FLAG_OFFSET, 0, 1)) ;
+        if (owner == 0) {
+            owner = Thread.currentThread().getId();
+            flag = 0;
         }
         else {
-            waitQueue.add(Thread.currentThread());
-            guard = 0;
-            LockSupport.park();
+            Thread thread = Thread.currentThread();
+            WaitNode waitNode = new WaitNode(thread);
+            waitQueue.add(waitNode);
+            flag = 0;
+            while (!waitNode.shouldWakeUp) {
+                LockSupport.park(this);
+            }
         }
     }
 
     public void unlock() {
-        while (!U.compareAndSwapInt(this, VALUE, 0, 1)) ;
-        if (waitQueue.isEmpty())
-            flag = 0;
-        else
-            LockSupport.unpark(waitQueue.remove());
-        guard = 0;
+        while (!U.compareAndSwapInt(this, FLAG_OFFSET, 0, 1)) ;
+        if (waitQueue.isEmpty()) {
+            owner = 0;
+        }
+        else {
+            WaitNode waitNode = waitQueue.remove();
+            waitNode.shouldWakeUp = true;
+            LockSupport.unpark(waitNode.thread);
+        }
+        flag = 0;
+    }
+
+    static class WaitNode {
+        final Thread thread;
+        volatile boolean shouldWakeUp = false;
+
+        public WaitNode(Thread thread) {
+            this.thread = thread;
+        }
     }
 }
