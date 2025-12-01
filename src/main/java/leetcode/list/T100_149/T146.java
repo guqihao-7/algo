@@ -1,7 +1,6 @@
 package leetcode.list.T100_149;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class T146 {
     public static class LRUCache {

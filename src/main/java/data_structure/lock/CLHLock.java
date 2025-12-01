@@ -1,14 +1,34 @@
-package codecrush;
-
-import data_structure.lock.Mutex;
+package data_structure.lock;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class MainTest {
-    private static volatile int a = 0;
+public class CLHLock {
+    private final AtomicReference<WaitNode> tail = new AtomicReference<>(new WaitNode());
+    private final ThreadLocal<WaitNode> self = ThreadLocal.withInitial(WaitNode::new);
+    private final ThreadLocal<WaitNode> prev = new ThreadLocal<>();
+
+    public void lock() {
+        WaitNode waitNode = self.get();
+        waitNode.waiting = true;
+        WaitNode oldTail = tail.getAndSet(waitNode);
+        prev.set(oldTail);
+        while (oldTail.waiting) {};
+    }
+
+    public void unlock() {
+        self.get().waiting = false;
+        self.set(prev.get());
+    }
+
+    static class WaitNode {
+        volatile boolean waiting = false;
+    }
+
+    private static int a = 0;
     private static final AtomicInteger activeThreads = new AtomicInteger(0);
-    private static volatile boolean errorDetected = false;
-    private static final Mutex lock = new Mutex();
+    private static boolean errorDetected = false;
+    private static final CLHLock lock = new CLHLock();
 
     public static void main(String[] args) throws InterruptedException {
         Runnable task = () -> {
@@ -23,6 +43,9 @@ public class MainTest {
                     errorDetected = true;
                 }
                 a++;
+
+                if (a % 100000 == 0) System.out.println("a = " + a);
+
                 activeThreads.decrementAndGet();
                 lock.unlock();
             }
@@ -30,11 +53,13 @@ public class MainTest {
 
         Thread t1 = new Thread(task);
         Thread t2 = new Thread(task);
-
+        Thread t3 = new Thread(task);
         t1.start();
         t2.start();
+        t3.start();
         t1.join();
         t2.join();
+        t3.join();
 
         System.out.println("a = " + a);
         if (errorDetected) {

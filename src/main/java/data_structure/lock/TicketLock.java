@@ -1,4 +1,4 @@
-package data_structure;
+package data_structure.lock;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
